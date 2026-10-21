@@ -1,5 +1,7 @@
 package com.bootcamp.smarthome.controller;
 
+import com.bootcamp.smarthome.exception.InvalidCommandException;
+
 /**
  * Parses full command strings into their component parts for use by
  * {@link HomeController}.
@@ -19,9 +21,13 @@ public class CommandParser {
      *
      * @param fullCommand the full command string
      * @return the device ID
+     * @throws InvalidCommandException if the command is empty
      */
-    public static String extractDeviceId(String fullCommand) {
-        return fullCommand.split(" ")[0];
+    public static String extractDeviceId(String fullCommand) throws InvalidCommandException {
+        if (fullCommand == null || fullCommand.isBlank()) {
+            throw new InvalidCommandException("Command cannot be empty");
+        }
+        return fullCommand.trim().split(" ")[0];
     }
 
     /**
@@ -31,11 +37,15 @@ public class CommandParser {
      * so it must contain both the action and the value when a value is present.
      *
      * Examples:
-     *   "LIGHT_01 SET_BRIGHTNESS 75"   should return "SET_BRIGHTNESS 75"
-     *   "LIGHT_01 TURN_ON"             should return "TURN_ON"
+     *   "LIGHT_01 SET_BRIGHTNESS 75"  → should return "SET_BRIGHTNESS 75"
+     *   "LIGHT_01 TURN_ON"            → should return "TURN_ON"
      */
-    public static String extractCommand(String fullCommand) {
-        String[] parts = fullCommand.split(" ",2);
-        return parts[1];
+    public static String extractCommand(String fullCommand) throws InvalidCommandException {
+        // limit 2: split only at the first space, so "SET_BRIGHTNESS 75" stays together
+        String[] parts = fullCommand.trim().split(" ", 2);
+        if (parts.length < 2 || parts[1].isBlank()) {
+            throw new InvalidCommandException("Command has no action: '" + fullCommand + "'");
+        }
+        return parts[1].trim();
     }
 }

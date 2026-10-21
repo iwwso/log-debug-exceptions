@@ -1,5 +1,8 @@
 package com.bootcamp.smarthome.device;
 
+import com.bootcamp.smarthome.exception.InvalidCommandException;
+import com.bootcamp.smarthome.exception.InvalidValueException;
+
 /**
  * A programmable smart thermostat.
  *
@@ -16,41 +19,51 @@ public class SmartThermostat extends Device {
         this.temperature = 20.0;
     }
 
-    // -------------------------------------------------------------------------
+    //
     // Device-specific behaviour
-    // -------------------------------------------------------------------------
+    //
 
     /**
      * Sets the target temperature in Celsius.
      *
      * Valid range: 10.0–35.0 inclusive.
+     *
+     * @throws InvalidValueException if temp is outside [10.0, 35.0]
      */
-    public void setTemperature(double temp) {
-        if (temp < 10.0 || temp > 35.0) {            System.out.println("Invalid temperature: " + temp + ". Must be between 10.0 and 35.0.");
-            return;
+    public void setTemperature(double temp) throws InvalidValueException {
+        if (temp < 10.0 || temp > 35.0) {
+            throw new InvalidValueException("temperature", temp, "must be between 10.0 and 35.0");
         }
         this.temperature = temp;
         System.out.println(getName() + " temperature set to " + temp + " °C");
     }
 
     @Override
-    public void executeCommand(String command) {
+    public void executeCommand(String command) throws InvalidCommandException, InvalidValueException {
         if (command.startsWith("SET_TEMP")) {
             String[] parts = command.split(" ");
-            double temp = (parts.length > 1) ? Double.parseDouble(parts[1]) : 20.0;
+            if (parts.length < 2) {
+                throw new InvalidCommandException("SET_TEMP requires a value, e.g. 'SET_TEMP 22.5'");
+            }
+            double temp;
+            try {
+                temp = Double.parseDouble(parts[1]);
+            } catch (NumberFormatException e) {
+                throw new InvalidCommandException("Temperature must be a number, got: " + parts[1], e);
+            }
             setTemperature(temp);
         } else if (command.equals("TURN_ON")) {
             turnOn();
         } else if (command.equals("TURN_OFF")) {
             turnOff();
         } else {
-            System.out.println("Unknown command for SmartThermostat '" + getName() + "': " + command);
+            throw new InvalidCommandException("Unknown command for SmartThermostat '" + getName() + "': " + command);
         }
     }
 
-    // -------------------------------------------------------------------------
+    //
     // Getters
-    // -------------------------------------------------------------------------
+    //
 
     public double getTemperature() {
         return temperature;
