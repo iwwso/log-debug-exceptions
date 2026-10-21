@@ -31,11 +31,11 @@ public class CommandParser {
      * so it must contain both the action and the value when a value is present.
      *
      * Examples:
-     *   "LIGHT_01 SET_BRIGHTNESS 75"  → should return "SET_BRIGHTNESS 75"
-     *   "LIGHT_01 TURN_ON"            → should return "TURN_ON"
+     *   "LIGHT_01 SET_BRIGHTNESS 75"   should return "SET_BRIGHTNESS 75"
+     *   "LIGHT_01 TURN_ON"             should return "TURN_ON"
      */
     public static String extractCommand(String fullCommand) {
-        String[] parts = fullCommand.split(" ");
+        String[] parts = fullCommand.split(" ",2);
         return parts[1];
     }
 }
