@@ -25,7 +25,7 @@ public class SmartLock extends Device {
      * Validates the supplied PIN against the stored PIN.
      */
     public void validatePin(String pin) {
-        if (pin.equals(storedPin)) {
+        if (storedPin.equals(pin)) {
             isLocked = false;
             System.out.println(getName() + " unlocked successfully.");
         } else {
