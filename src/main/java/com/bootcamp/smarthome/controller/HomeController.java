@@ -1,6 +1,8 @@
 package com.bootcamp.smarthome.controller;
 
 import com.bootcamp.smarthome.device.Device;
+import com.bootcamp.smarthome.exception.DeviceNotFoundException;
+import com.bootcamp.smarthome.exception.DeviceOfflineException;
 import com.bootcamp.smarthome.exception.HomeAutomationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +62,19 @@ public class HomeController {
         return null;
     }
 
+    /**
+     * Same as {@link #findDevice(String)}, but never returns {@code null}.
+     *
+     * @throws DeviceNotFoundException if no device with this ID is registered
+     */
+    public Device getDevice(String deviceId) {
+        Device device = findDevice(deviceId);
+        if (device == null) {
+            throw new DeviceNotFoundException(deviceId);
+        }
+        return device;
+    }
+
     // -------------------------------------------------------------------------
     // Command routing
     // -------------------------------------------------------------------------
@@ -73,6 +88,7 @@ public class HomeController {
      *
      * @param fullCommand the full command string
      * @throws HomeAutomationException if the command fails (original exception is the cause)
+     * @throws DeviceNotFoundException if the device ID is not registered
      */
     public void sendCommand(String fullCommand) throws HomeAutomationException {
         String deviceId = "unknown";
@@ -81,16 +97,11 @@ public class HomeController {
             logger.debug("Command received for device '{}': '{}'", deviceId, fullCommand);
             String command = CommandParser.extractCommand(fullCommand);
 
-            Device device = findDevice(deviceId);
-
-            if (device == null) {
-                System.out.println("Device not found: " + deviceId);
-                return;
-            }
+            Device device = getDevice(deviceId);
 
             if (!device.isOnline()) {
                 logger.warn("Device '{}' is offline - command '{}' skipped", deviceId, command);
-                return;
+                throw new DeviceOfflineException(deviceId);
             }
 
             device.executeCommand(command);
@@ -99,6 +110,9 @@ public class HomeController {
             logger.error("Command '{}' failed for device '{}': {}", fullCommand, deviceId, e.getMessage());
             throw new HomeAutomationException(
                     "Command '" + fullCommand + "' failed for device '" + deviceId + "'", e);
+        } catch (DeviceNotFoundException e) {
+            logger.error("Command '{}' failed: {}", fullCommand, e.getMessage());
+            throw e;
         } finally {
             System.out.println("Command processing ended for device [" + deviceId + "]");
         }

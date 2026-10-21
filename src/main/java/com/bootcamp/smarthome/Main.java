@@ -5,6 +5,7 @@ import com.bootcamp.smarthome.device.Device;
 import com.bootcamp.smarthome.device.SmartLight;
 import com.bootcamp.smarthome.device.SmartLock;
 import com.bootcamp.smarthome.device.SmartThermostat;
+import com.bootcamp.smarthome.exception.DeviceNotFoundException;
 import com.bootcamp.smarthome.exception.HomeAutomationException;
 
 /**
@@ -74,13 +75,16 @@ public class Main {
         controller.printAllDevices();
     }
 
-    /** Sends a command and prints a readable message instead of crashing */
+    /** Sends a command and prints a readable message instead of crashing. */
     private static void send(HomeController controller, String command) {
         try {
             controller.sendCommand(command);
         } catch (HomeAutomationException e) {
             String cause = (e.getCause() != null) ? " Cause: " + e.getCause().getMessage() : "";
             System.out.println("ERROR: " + e.getMessage() + "." + cause);
+        } catch (DeviceNotFoundException e) {
+            System.out.println("ERROR: " + e.getMessage());
         }
     }
+
 }
